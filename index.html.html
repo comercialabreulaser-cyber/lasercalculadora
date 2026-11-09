@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaserCalc Pro - Acesso Restrito</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { background-color: #020617; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- TELA DE LOGIN -->
+    <div id="auth-screen" class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md space-y-6">
+            <div class="text-center space-y-2">
+                <div class="bg-cyan-500 text-slate-950 w-12 h-12 mx-auto rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-cyan-500/20">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white">LaserCalc Pro</h1>
+                <p class="text-xs text-slate-400">Área restrita. Entre com a sua conta autorizada.</p>
+            </div>
+
+            <div id="auth-error" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl text-center"></div>
+            <div id="auth-success" class="hidden bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs p-3 rounded-xl text-center"></div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">E-mail</label>
+                    <input type="email" id="auth-email" placeholder="seu@email.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Palavra-passe</label>
+                    <div class="relative">
+                        <input type="password" id="auth-password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 pr-10 text-white focus:outline-none focus:border-cyan-500">
+                        <span id="toggle-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white cursor-pointer">
+                            <i id="eye-icon" class="fa-solid fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="handleLogin()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl transition-all shadow-lg shadow-cyan-500/20 cursor-pointer">
+                    Entrar no Sistema
+                </button>
+
+                <div class="flex justify-end items-center pt-1 text-xs">
+                    <button type="button" onclick="handleResetPassword()" class="text-cyan-400 hover:underline cursor-pointer">Esqueci a Senha</button>
+                </div>
+
+                <!-- BOTÃO DE SOLICITAR COMPRA / ACESSO VIA WHATSAPP -->
+                <div class="pt-4 border-t border-slate-800 text-center">
+                    <a href="https://wa.me/5592984089355?text=Olá!%20Gostaria%20de%20adquirir%20o%20sistema%20LaserCalc%20Pro." target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 text-sm no-underline cursor-pointer">
+                        <i class="fa-brands fa-whatsapp text-base"></i> Quero Comprar / Solicitar Acesso
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APLICATIVO PRINCIPAL -->
+    <div id="app-screen" class="hidden flex-grow flex flex-col">
+        <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-cyan-500 text-slate-950 p-2.5 rounded-xl font-bold text-xl shadow-lg shadow-cyan-500/20">
+                        <i class="fa-solid fa-calculator"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight text-white">LaserCalc Pro</h1>
+                        <p class="text-xs text-slate-400">Utilizador: <span id="user-display-email" class="text-cyan-400"></span></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700 flex-wrap justify-center">
+                    <button onclick="switchTab('tutorials')" id="tab-btn-tutorials" class="px-3 py-2 rounded-lg text-sm font-medium transition-all text-slate-300 hover:text-white cursor-pointer">
+                        <i class="fa-solid fa-circle-play mr-1.5"></i>Ajuda & Vídeos
+                    </button>
+                    <button onclick="switchTab('calculator')" id="tab-btn-calculator" class="px-3 py-2 rounded-lg text-sm font-medium transition-all bg-cyan-500 text-slate-950 shadow cursor-pointer">
+                        <i class="fa-solid fa-sliders mr-1.5"></i>Calculadora
+                    </button>
+                    <button onclick="switchTab('catalog')" id="tab-btn-catalog" class="px-3 py-2 rounded-lg text-sm font-medium transition-all text-slate-300 hover:text-white cursor-pointer">
+                        <i class="fa-solid fa-box-archive mr-1.5"></i>Itens
+                    </button>
+                    <button onclick="switchTab('saved-budgets')" id="tab-btn-saved-budgets" class="px-3 py-2 rounded-lg text-sm font-medium transition-all text-slate-300 hover:text-white cursor-pointer">
+                        <i class="fa-solid fa-bookmark mr-1.5"></i>Orçamentos Salvos
+                    </button>
+                    <button onclick="switchTab('clients')" id="tab-btn-clients" class="px-3 py-2 rounded-lg text-sm font-medium transition-all text-slate-300 hover:text-white cursor-pointer">
+                        <i class="fa-solid fa-users mr-1.5"></i>Clientes
+                    </button>
+                    <button onclick="switchTab('history')" id="tab-btn-history" class="px-3 py-2 rounded-lg text-sm font-medium transition-all text-slate-300 hover:text-white cursor-pointer">
+                        <i class="fa-solid fa-clock-rotate-left mr-1.5"></i>Histórico
+                    </button>
+                    <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-3 py-2 rounded-lg text-sm font-medium transition-all text-slate-300 hover:text-white cursor-pointer">
+                        <i class="fa-solid fa-building mr-1.5"></i>Empresa
+                    </button>
+                    <button onclick="handleLogout()" class="px-3 py-2 rounded-lg text-sm font-medium transition-all text-red-400 hover:bg-red-500/10 cursor-pointer" title="Sair">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full">
+            
+            <!-- ABA DA CALCULADORA -->
+            <div id="tab-calculator" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-slate-900 border border-emerald-500/40 rounded-2xl p-4 shadow-xl flex items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-bookmark text-emerald-400"></i> Orçamento Atual
+                            </h2>
+                            <p class="text-xs text-slate-400">Salve o orçamento preenchido para consultar depois na aba "Orçamentos Salvos"</p>
+                        </div>
+                        <button type="button" onclick="saveCurrentBudget()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all whitespace-nowrap shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-floppy-disk"></i> Salvar Orçamento
+                        </button>
+                    </div>
+
+                    <!-- SELEÇÃO DE CLIENTE E IDENTIFICAÇÃO -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                        <h2 class="text-lg font-semibold text-cyan-400 mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-user-tag"></i> Cliente e Identificação do Orçamento
+                        </h2>
+                        
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <label class="block text-xs font-bold text-cyan-400 uppercase tracking-wider">Selecionar Cliente Cadastrado</label>
+                                <button type="button" onclick="switchTab('clients')" class="text-xs text-cyan-400 hover:underline"><i class="fa-solid fa-address-book mr-1"></i> Ver Lista de Clientes</button>
+                            </div>
+                            <select id="selectClientPreset" onchange="applySelectedClient()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500">
+                                <option value="">-- Selecionar Cliente Salvo --</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Nome do Cliente / Empresa</label>
+                                <input type="text" id="clientNameInput" oninput="calculate()" placeholder="Ex: João Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Telefone / WhatsApp</label>
+                                <input type="text" id="clientPhoneInput" oninput="calculate()" placeholder="Ex: (92) 98888-7777" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">CNPJ / CPF</label>
+                                <input type="text" id="clientDocInput" oninput="calculate()" placeholder="Ex: 000.000.000-00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Endereço / Cidade</label>
+                                <input type="text" id="clientAddressInput" oninput="calculate()" placeholder="Ex: Manaus - AM" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Nº de Controle</label>
+                                <input type="text" id="budgetControlNumber" value="001" oninput="calculate()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-cyan-400 font-bold focus:outline-none focus:border-cyan-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Data e Hora</label>
+                                <input type="text" id="budgetDateTime" value="" oninput="calculate()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-300 text-sm focus:outline-none focus:border-cyan-500">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Descrição do Projeto / Observação</label>
+                                <input type="text" id="projectName" oninput="calculate()" placeholder="Ex: Lotes de Placas e Copos Personalizados" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                        <h2 class="text-lg font-semibold text-cyan-400 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-microchip"></i> 1. Custos Operacionais Gerais
+                        </h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-1 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Custo de Energia (R$/kWh)</label>
+                                <input type="number" id="energyCost" value="0.95" step="0.05" oninput="calculate()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-slate-900 border border-cyan-500/40 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-sm font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-box-archive"></i> Inserir Item do Catálogo
+                                </h2>
+                                <p class="text-xs text-slate-400">Selecione um item salvo para preencher automaticamente na calculadora</p>
+                            </div>
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <select id="catalogItemsSelect" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 flex-grow sm:w-56">
+                                    <option value="">-- Selecionar Item Salvo --</option>
+                                </select>
+                                <button type="button" onclick="addSelectedItemFromCatalog()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all whitespace-nowrap shadow-lg cursor-pointer">
+                                    <i class="fa-solid fa-plus mr-1"></i> Inserir Item
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+                            <div>
+                                <h2 class="text-base font-semibold text-cyan-400 flex items-center gap-2">
+                                    <i class="fa-solid fa-layer-group"></i> 2. Itens do Orçamento
+                                </h2>
+                                <p class="text-xs text-slate-400">Adicione diferentes tipos de itens avulsos</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="addItem('sheet')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-2 rounded-xl text-xs transition-all shadow-lg flex items-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-plus"></i> Corte e Gravação
+                                </button>
+                                <button type="button" onclick="addItem('tumbler')" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs transition-all shadow-lg flex items-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-plus"></i> Copo / Garrafa
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="budget-items-container" class="space-y-4"></div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                        <h2 class="text-lg font-semibold text-cyan-400 mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line"></i> 3. Margens, Impostos e Desconto
+                        </h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div><label class="block text-sm font-medium text-slate-300 mb-1">Margem de Lucro (%)</label><input type="number" id="profitMargin" value="100" step="5" oninput="calculate()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500"></div>
+                            <div><label class="block text-sm font-medium text-slate-300 mb-1">Impostos / Taxas (%)</label><input type="number" id="taxRate" value="0" step="1" oninput="calculate()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500"></div>
+                            <div><label class="block text-sm font-medium text-slate-300 mb-1">Custos Extras (R$)</label><input type="number" id="extraCost" value="0.00" step="1.00" oninput="calculate()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500"></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Tipo de Desconto</label>
+                                <select id="discountType" onchange="updateDiscountLabel(); calculate();" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                                    <option value="percent">Desconto em Percentagem (%)</option>
+                                    <option value="value">Desconto em Valor Fixo (R$)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label id="discountLabel" class="block text-sm font-medium text-amber-300 mb-1">Valor do Desconto (%)</label>
+                                <div class="relative">
+                                    <input type="number" id="discountValue" value="0.00" step="1.00" min="0" oninput="calculate()" class="w-full bg-slate-950 border border-amber-500/50 rounded-xl px-3.5 py-2.5 pr-10 text-amber-400 font-bold focus:outline-none focus:border-amber-500">
+                                    <span id="discountSymbol" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-amber-400 font-bold pointer-events-none">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-slate-900 border border-cyan-500/30 rounded-2xl p-6 shadow-2xl sticky top-24">
+                        <h2 class="text-xl font-bold text-white mb-6 flex items-center justify-between border-b border-slate-800 pb-4">
+                            <span>Resumo do Orçamento</span>
+                            <i class="fa-solid fa-file-invoice-dollar text-cyan-400"></i>
+                        </h2>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between text-slate-300"><span>Custo de Materiais:</span><span id="resMaterial" class="font-semibold text-white">R$ 0,00</span></div>
+                            <div class="flex justify-between text-slate-300"><span>Custo de Máquina:</span><span id="resMachine" class="font-semibold text-white">R$ 0,00</span></div>
+                            <div class="flex justify-between text-slate-300"><span>Mão de Obra:</span><span id="resLabor" class="font-semibold text-white">R$ 0,00</span></div>
+                            <div class="flex justify-between text-slate-300"><span>Custos Extras:</span><span id="resExtra" class="font-semibold text-white">R$ 0,00</span></div>
+                            <div class="border-t border-slate-800 pt-3 flex justify-between text-slate-200 font-medium"><span>Custo Total:</span><span id="resTotalCost" class="text-cyan-400 font-bold">R$ 0,00</span></div>
+                            <div class="flex justify-between text-slate-300"><span>Lucro Estimado:</span><span id="resProfit" class="font-semibold text-emerald-400">R$ 0,00</span></div>
+                            <div id="resDiscountLine" class="hidden flex justify-between text-amber-400 font-medium text-xs bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                                <span>Desconto Aplicado:</span><span id="resDiscountAmount">- R$ 0,00</span>
+                            </div>
+                            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mt-6 text-center">
+                                <span class="block text-xs uppercase tracking-wider text-slate-400 mb-1">Preço Final Sugerido</span>
+                                <span id="resFinalPrice" class="text-3xl font-black text-cyan-400">R$ 0,00</span>
+                            </div>
+                        </div>
+                        <div class="mt-6 space-y-3">
+                            <button type="button" onclick="saveAndExportPDF()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 cursor-pointer"><i class="fa-solid fa-file-pdf"></i> Baixar PDF</button>
+                            <button type="button" onclick="sendWhatsAppWithPDF()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer"><i class="fa-brands fa-whatsapp"></i> Enviar PDF no WhatsApp</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA DE ORÇAMENTOS SALVOS -->
+            <div id="tab-saved-budgets" class="hidden space-y-6 w-full">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-slate-800 pb-4">
+                        <div>
+                            <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-bookmark"></i> Orçamentos Salvos no Sistema</h2>
+                            <p class="text-xs text-slate-400">Selecione um orçamento guardado para carregar na calculadora</p>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-950 text-slate-400 uppercase text-xs border-b border-slate-800">
+                                <tr>
+                                    <th class="px-4 py-3">Nome / Identificador</th>
+                                    <th class="px-4 py-3">Cliente</th>
+                                    <th class="px-4 py-3">Data / Hora</th>
+                                    <th class="px-4 py-3">Valor Final</th>
+                                    <th class="px-4 py-3 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="saved-budgets-table-body" class="divide-y divide-slate-800">
+                                <tr>
+                                    <td colspan="5" class="px-4 py-6 text-center text-slate-500 text-xs">Nenhum orçamento salvo ainda.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA DE ITENS / MATERIAIS SALVOS (CATÁLOGO) -->
+            <div id="tab-catalog" class="hidden space-y-6 w-full">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <h2 class="text-lg font-semibold text-cyan-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-box-archive"></i> Catálogo de Itens Salvos</h2>
+                    <p class="text-xs text-slate-400">Estes itens são salvos diretamente através do botão "Salvar no Catálogo" dentro de cada item na calculadora.</p>
+                    <div class="overflow-x-auto pt-2">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-950 text-slate-400 uppercase text-xs border-b border-slate-800">
+                                <tr>
+                                    <th class="px-4 py-3">Nome do Item</th>
+                                    <th class="px-4 py-3">Tipo / Máquina</th>
+                                    <th class="px-4 py-3">Custo Base / Material</th>
+                                    <th class="px-4 py-3 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="catalog-table-body" class="divide-y divide-slate-800">
+                                <tr>
+                                    <td colspan="4" class="px-4 py-6 text-center text-slate-500 text-xs">Nenhum item guardado no catálogo ainda.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA DE CLIENTES -->
+            <div id="tab-clients" class="hidden space-y-6 w-full">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                    
+                    <!-- FORMULÁRIO DE CADASTRO DE CLIENTES -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                        <h2 class="text-lg font-semibold text-cyan-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Registar / Editar Cliente</h2>
+                        <input type="hidden" id="editClientOriginalName" value="">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Nome do Cliente / Empresa *</label>
+                            <input type="text" id="clientName" placeholder="Ex: João Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Telefone / WhatsApp</label>
+                            <input type="text" id="clientPhone" placeholder="Ex: (92) 99999-9999" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">CNPJ / CPF</label>
+                            <input type="text" id="clientDoc" placeholder="Ex: 000.000.000-00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Endereço / Cidade</label>
+                            <input type="text" id="clientAddress" placeholder="Ex: Manaus - AM" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button type="button" onclick="saveClient()" class="flex-grow bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-cyan-500/20 cursor-pointer">Salvar Cliente</button>
+                            <button type="button" onclick="clearClientForm()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-3 rounded-xl transition-all cursor-pointer">Limpar</button>
+                        </div>
+                    </div>
+
+                    <!-- TABELA DE CLIENTES COM O BOTÃO DE ADMIN DESTAQUE -->
+                    <div class="lg:col-span-2 space-y-6">
+                        
+                        <!-- BOTÃO ADMIN PARA GERENCIAR E DELETAR E-MAILS DE USUÁRIOS -->
+                        <div class="bg-gradient-to-r from-amber-500/20 to-cyan-500/20 border-2 border-amber-500/50 rounded-2xl p-5 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div>
+                                <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-user-shield text-base"></i> Gestão de Acessos ao Sistema
+                                </h3>
+                                <p class="text-xs text-slate-300 mt-0.5">Cadastre, visualize e remova e-mails autorizados.</p>
+                            </div>
+                            <button type="button" onclick="openAdminAccessModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-4 py-3 rounded-xl transition-all shadow-lg whitespace-nowrap cursor-pointer flex items-center gap-2">
+                                <i class="fa-solid fa-key"></i> Gerenciar E-mails (Admin)
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                            <h2 class="text-lg font-semibold text-cyan-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-address-book"></i> Lista de Clientes Salvos</h2>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm text-slate-300">
+                                    <thead class="bg-slate-950 text-slate-400 uppercase text-xs border-b border-slate-800">
+                                        <tr>
+                                            <th class="px-4 py-3">Nome / Empresa</th>
+                                            <th class="px-4 py-3">Telefone</th>
+                                            <th class="px-4 py-3">Documento</th>
+                                            <th class="px-4 py-3 text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="clients-table-body" class="divide-y divide-slate-800">
+                                        <tr>
+                                            <td colspan="4" class="px-4 py-6 text-center text-slate-500 text-xs">Nenhum cliente cadastrado ainda.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ABA DE VÍDEOS / TUTORIAIS -->
+            <div id="tab-tutorials" class="space-y-6 w-full">
+                <div class="bg-slate-900 border border-cyan-500/30 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-base font-semibold text-cyan-400 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-play"></i> Tutoriais e Como Usar o App
+                        </h2>
+                        <p class="text-xs text-slate-400">Assista aos vídeos explicativos para aproveitar ao máximo o LaserCalc Pro</p>
+                    </div>
+                    <button type="button" onclick="toggleAdminPanel()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30 text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap">
+                        <i class="fa-solid fa-lock mr-1.5"></i> Gerenciar Vídeos (Admin)
+                    </button>
+                </div>
+
+                <div id="tutorial-admin-section" class="hidden bg-slate-900 border border-cyan-500/40 rounded-2xl p-6 shadow-xl space-y-4">
+                    <div id="tutorial-auth-box" class="space-y-3 max-w-md">
+                        <h3 class="text-xs font-bold text-white"><i class="fa-solid fa-key text-cyan-400 mr-1"></i> Digite sua palavra-passe de Administrador</h3>
+                        <div id="tutorial-error" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-2 rounded-lg"></div>
+                        <div class="flex gap-2">
+                            <input type="password" id="tutorialAdminPass" placeholder="Palavra-passe" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-500">
+                            <button type="button" onclick="verifyTutorialAdmin()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap cursor-pointer">Entrar</button>
+                        </div>
+                    </div>
+
+                    <div id="admin-video-panel" class="hidden space-y-4 pt-2 border-t border-slate-800">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xs font-bold text-cyan-400">Adicionar ou Organizar Vídeos</h3>
+                            <button type="button" onclick="lockTutorialAdmin()" class="text-xs text-slate-400 hover:text-white">Fechar Painel</button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[11px] text-slate-300 mb-1">Título do Vídeo</label>
+                                <input type="text" id="vidTitle" placeholder="Ex: Apresentação da Calculadora" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-slate-300 mb-1">Link do YouTube</label>
+                                <input type="text" id="vidUrl" placeholder="Ex: https://www.youtube.com/watch?v=..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-300 mb-1">Breve Descrição</label>
+                            <input type="text" id="vidDesc" placeholder="Ex: Explicação inicial do sistema." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs">
+                        </div>
+                        <button type="button" onclick="saveVideoTutorial()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2 px-5 rounded-xl text-xs cursor-pointer">Publicar Vídeo</button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <div id="videos-grid-container" class="grid grid-cols-1 gap-6"></div>
+                </div>
+            </div>
+
+            <!-- ABA DE HISTÓRICO DE ORÇAMENTOS -->
+            <div id="tab-history" class="hidden space-y-6 w-full">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-slate-800 pb-4">
+                        <div>
+                            <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Orçamentos Emitidos</h2>
+                            <p class="text-xs text-slate-400">Lista de todos os orçamentos guardados no sistema</p>
+                        </div>
+                        <button type="button" onclick="clearHistory()" class="bg-red-600/20 hover:bg-red-600/40 text-red-400 font-bold px-4 py-2 rounded-xl text-xs border border-red-500/30 transition-all cursor-pointer">
+                            <i class="fa-solid fa-trash mr-1.5"></i> Limpar Histórico
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-950 text-slate-400 uppercase text-xs border-b border-slate-800">
+                                <tr>
+                                    <th class="px-4 py-3">Nº Controle</th>
+                                    <th class="px-4 py-3">Data / Hora</th>
+                                    <th class="px-4 py-3">Projeto / Cliente</th>
+                                    <th class="px-4 py-3">Valor Final</th>
+                                    <th class="px-4 py-3 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body" class="divide-y divide-slate-800">
+                                <tr>
+                                    <td colspan="5" class="px-4 py-6 text-center text-slate-500 text-xs">Nenhum orçamento emitido ou salvo ainda.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA DE EMPRESA / LOGOTIPO -->
+            <div id="tab-settings" class="hidden space-y-6 w-full">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    
+                    <!-- FORMULÁRIO À ESQUERDA -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                        <h2 class="text-lg font-semibold text-cyan-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-building"></i> Dados da Empresa</h2>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Logotipo da Empresa (Imagem)</label>
+                            <input type="file" id="companyLogoInput" accept="image/*" onchange="handleLogoUpload(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-500 file:text-slate-950 hover:file:bg-cyan-400 cursor-pointer">
+                            <div id="logoPreviewContainer" class="mt-3 hidden">
+                                <span class="block text-xs text-slate-400 mb-1">Pré-visualização do Logotipo:</span>
+                                <img id="companyLogoPreview" src="" alt="Logotipo" class="h-16 object-contain border border-slate-800 rounded-lg p-1 bg-slate-950">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Nome da Empresa</label>
+                            <input type="text" id="companyName" oninput="updatePdfPreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500" placeholder="Ex: Abreu Laser">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">CNPJ / CPF</label>
+                            <input type="text" id="companyDoc" oninput="updatePdfPreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500" placeholder="Ex: 00.000.000/0001-00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Número de Telefone (WhatsApp)</label>
+                            <input type="text" id="companyPhone" oninput="updatePdfPreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500" placeholder="Ex: (92) 99999-9999">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Cidade / Endereço</label>
+                            <input type="text" id="companyAddress" oninput="updatePdfPreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-cyan-500" placeholder="Ex: Manaus - AM">
+                        </div>
+                        <button type="button" onclick="saveSettings()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-cyan-500/20 cursor-pointer">Salvar Dados da Empresa</button>
+                    </div>
+
+                    <!-- PRÉ-VISUALIZAÇÃO DO PDF À DIREITA -->
+                    <div class="bg-slate-900 border border-cyan-500/30 rounded-2xl p-6 shadow-2xl space-y-4">
+                        <h2 class="text-lg font-semibold text-cyan-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Pré-visualização do Orçamento (PDF)</h2>
+                        <p class="text-xs text-slate-400">Veja em tempo real como o cabeçalho e os itens aparecerão no documento:</p>
+                        
+                        <div id="pdf-preview-box" class="bg-white text-slate-900 p-6 rounded-xl shadow-inner border border-slate-300 font-sans space-y-3 text-sm relative">
+                            <div class="flex items-center gap-4 border-b border-slate-200 pb-3">
+                                <div id="preview-logo-box" class="w-14 h-14 border border-dashed border-slate-400 rounded-lg flex items-center justify-center text-[10px] text-slate-400 overflow-hidden bg-slate-50">
+                                    <span id="preview-no-logo">Sem Logo</span>
+                                    <img id="preview-logo-img" src="" class="hidden w-full h-full object-contain">
+                                </div>
+                                <div class="space-y-0.5">
+                                    <h3 id="preview-company-name" class="font-bold text-base text-slate-800">Nome da sua Empresa</h3>
+                                    <p id="preview-company-doc" class="text-[11px] text-slate-600">CNPJ: 00.000.000/0001-00</p>
+                                    <p id="preview-company-phone" class="text-[11px] text-slate-600">Tel: (00) 00000-0000</p>
+                                    <p id="preview-company-address" class="text-[11px] text-slate-600">Endereço: Cidade - UF</p>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-start border-b border-slate-200 pb-2">
+                                <div>
+                                    <h4 class="font-bold text-cyan-700 text-sm">ORÇAMENTO DE SERVIÇO A LASER</h4>
+                                    <p class="text-[11px] text-slate-800 font-bold">Cliente: <span id="preview-client-name" class="font-normal text-slate-600">--</span></p>
+                                    <p class="text-[11px] text-slate-600">CNPJ/CPF: <span id="preview-client-doc">--</span> | Tel: <span id="preview-client-phone">--</span></p>
+                                    <p class="text-[11px] text-slate-600">Endereço: <span id="preview-client-address">--</span></p>
+                                    <p class="text-[11px] text-slate-600 pt-1"><strong>Projeto/Obs:</strong> <span id="preview-project-name">Serviço Laser</span></p>
+                                </div>
+                                <div class="text-right bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+                                    <div><span class="text-[8px] uppercase font-bold text-slate-500">Nº Controle: </span><span id="preview-control-number" class="text-[11px] font-black text-slate-800">001</span></div>
+                                    <div><span class="text-[8px] uppercase font-bold text-slate-500">Data: </span><span id="preview-datetime" class="text-[9px] font-bold text-slate-700">00/00/0000 00:00</span></div>
+                                </div>
+                            </div>
+
+                            <!-- Lista Discriminada na Pré-visualização -->
+                            <div class="space-y-1.5 pt-1">
+                                <span class="block text-[11px] font-bold text-slate-700 uppercase">Itens do Orçamento:</span>
+                                <div id="preview-items-list" class="space-y-1 bg-slate-50 p-2 rounded-lg border border-slate-200 text-xs">
+                                    <p class="text-slate-500 italic text-[11px]">Nenhum item adicionado.</p>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 border-t border-slate-200 text-right space-y-0.5">
+                                <div id="preview-discount-box" class="hidden text-amber-700 text-[11px]">Desconto: <span id="preview-discount-val">- R$ 0,00</span></div>
+                                <div class="font-bold text-slate-700">Valor Final: <span id="preview-final-price" class="font-black text-cyan-700 text-base">R$ 0,00</span></div>
+                            </div>
+
+                            <div class="text-right pt-2 text-[9px] text-slate-400 border-t border-slate-100">
+                                LaserCalc Pro - Sistema de Gestão
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL DE SENHA PARA GERENCIAR E-MAILS -->
+    <div id="admin-access-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-sm space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-lock mr-1"></i> Acesso Restrito ao Administrador</h3>
+                <button type="button" onclick="closeAdminAccessModal()" class="text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <p class="text-xs text-slate-400">Insira a sua palavra-passe de administrador para ver e gerenciar os e-mails liberados:</p>
+            <div id="admin-modal-error" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-2 rounded-lg"></div>
+            <div>
+                <input type="password" id="adminModalPassword" placeholder="Palavra-passe de admin" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none focus:border-amber-500">
+            </div>
+            <div class="pt-2">
+                <button type="button" onclick="verifyAdminAccessForUser()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs cursor-pointer">Desbloquear Gestão</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE GESTÃO DE E-MAILS (LISTA E CADASTRO) -->
+    <div id="user-register-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-amber-500/40 p-6 rounded-2xl shadow-2xl w-full max-w-lg space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-users-gear mr-1"></i> Gestão de E-mails Autorizados</h3>
+                <button type="button" onclick="closeUserRegisterModal()" class="text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            
+            <!-- FORMULÁRIO DE NOVO E-MAIL -->
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                <h4 class="text-xs font-bold text-cyan-400">Adicionar Novo E-mail</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input type="email" id="modalClientEmail" placeholder="novo@email.com" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+                    <input type="text" id="modalClientPass" placeholder="Palavra-passe" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+                </div>
+                <button type="button" onclick="saveNewUserAccess()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2 rounded-lg text-xs cursor-pointer">Adicionar / Liberar E-mail</button>
+            </div>
+
+            <!-- TABELA DE E-MAILS CADASTRADOS (COM OPÇÃO DE DELETAR) -->
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-slate-300">E-mails Atualmente Cadastrados:</h4>
+                <div class="max-h-48 overflow-y-auto border border-slate-800 rounded-xl">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] sticky top-0">
+                            <tr>
+                                <th class="px-3 py-2">E-mail</th>
+                                <th class="px-3 py-2">Senha</th>
+                                <th class="px-3 py-2 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-table-body" class="divide-y divide-slate-800">
+                            <tr>
+                                <td colspan="3" class="px-3 py-4 text-center text-slate-500">Nenhum utilizador extra cadastrado.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pt-2 text-right">
+                <button type="button" onclick="closeUserRegisterModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-xl text-xs cursor-pointer">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DO SISTEMA -->
+    <script>
+        let usersDB = JSON.parse(localStorage.getItem('laser_users_db')) || {
+            "comercial.abreulaser@gmail.com": "Cgaj@3361"
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const loggedUser = sessionStorage.getItem('laser_current_user');
+            if (loggedUser) {
+                showApp(loggedUser);
+            }
+            loadVideosList();
+        });
+
+        document.getElementById('toggle-password').addEventListener('click', function() {
+            const passInput = document.getElementById('auth-password');
+            const eyeIcon = document.getElementById('eye-icon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        });
+
+        function showError(msg) {
+            const err = document.getElementById('auth-error');
+            const succ = document.getElementById('auth-success');
+            succ.classList.add('hidden');
+            err.textContent = msg;
+            err.classList.remove('hidden');
+        }
+
+        function showSuccess(msg) {
+            const err = document.getElementById('auth-error');
+            const succ = document.getElementById('auth-success');
+            err.classList.add('hidden');
+            succ.textContent = msg;
+            succ.classList.remove('hidden');
+        }
+
+        window.handleLogin = function() {
+            const email = document.getElementById('auth-email').value.trim().toLowerCase();
+            const pass = document.getElementById('auth-password').value;
+
+            if (!email || !pass) {
+                showError("Preencha o e-mail e a palavra-passe.");
+                return;
+            }
+
+            if (usersDB[email] && usersDB[email] === pass) {
+                sessionStorage.setItem('laser_current_user', email);
+                showApp(email);
+            } else {
+                showError("Acesso negado. E-mail ou palavra-passe incorretos.");
+            }
+        }
+
+        window.handleResetPassword = function() {
+            const email = document.getElementById('auth-email').value.trim().toLowerCase();
+            if (!email || !usersDB[email]) {
+                showError("Digite o seu e-mail cadastrado acima para recuperar a senha.");
+                return;
+            }
+            alert("A sua palavra-passe para o e-mail " + email + " é: " + usersDB[email]);
+        }
+
+        window.handleLogout = function() {
+            sessionStorage.removeItem('laser_current_user');
+            location.reload();
+        }
+
+        function showApp(email) {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('user-display-email').textContent = email;
+            
+            switchTab('tutorials');
+
+            if (!document.getElementById('budgetDateTime').value) {
+                const now = new Date();
+                const formatted = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                document.getElementById('budgetDateTime').value = formatted;
+            }
+
+            loadSettings();
+            loadCatalogDropdown();
+            loadClientsDropdown();
+            loadClientsTable();
+            loadCatalogTable();
+            loadSavedBudgetsTable();
+            loadHistoryTable();
+            updateDiscountLabel();
+            calculate();
+        }
+
+        const machineDepreciationDefaults = {
+            diode: 2.00,
+            co2: 5.00,
+            fiber: 6.00
+        };
+
+        const machinePowersData = {
+            diode: [{ name: "Diodo 5.5W", factor: 0.8 }, { name: "Diodo 10W", factor: 1.0 }, { name: "Diodo 20W", factor: 1.3 }, { name: "Diodo 33W / 40W", factor: 1.6 }],
+            co2: [{ name: "CO2 40W", factor: 1.5 }, { name: "CO2 60W", factor: 2.0 }, { name: "CO2 80W", factor: 2.6 }, { name: "CO2 100W+", factor: 3.5 }],
+            fiber: [{ name: "Fiber Laser 20W", factor: 2.2 }, { name: "Fiber Laser 30W", factor: 2.8 }, { name: "Fiber Laser 50W", factor: 3.8 }]
+        };
+
+        let currentCalculations = {};
+        let companyLogoBase64 = "";
+
+        window.saveItemDirectlyFromCard = function(cardIndex) {
+            const card = document.querySelector(`[data-budget-item="${cardIndex}"]`);
+            if (!card) return;
+
+            const type = card.getAttribute('data-item-type');
+            const machine = card.querySelector('[name="mType"]').value;
+            const labor = card.querySelector('[name="itemLabor"]').value;
+            const depr = card.querySelector('[name="itemDepr"]').value;
+
+            let itemName = "";
+            let costVal = 0;
+            let timeVal = 0;
+
+            if (type === 'sheet') {
+                const customName = card.querySelector('[name="customName"]').value.trim();
+                const matTypeSelect = card.querySelector('[name="matType"]');
+                const matTypeText = matTypeSelect.options[matTypeSelect.selectedIndex].text;
+                itemName = customName ? customName : `Corte (${matTypeText})`;
+                costVal = parseFloat(card.querySelector('[name="sheetPrice"]').value) || 0;
+                timeVal = (parseFloat(card.querySelector('[name="cutTime"]').value) || 0) + (parseFloat(card.querySelector('[name="engTime"]').value) || 0);
+            } else {
+                const customName = card.querySelector('[name="customName"]').value.trim();
+                const tType = card.querySelector('[name="tType"]').value;
+                itemName = customName ? customName : tType;
+                costVal = parseFloat(card.querySelector('[name="buyCost"]').value) || 0;
+                timeVal = (parseFloat(card.querySelector('[name="cutTime"]').value) || 0) + (parseFloat(card.querySelector('[name="engTime"]').value) || 0);
+            }
+
+            if (!itemName) {
+                alert('Preencha um nome ou descrição para o item antes de salvá-lo no catálogo.');
+                return;
+            }
+
+            let catalogDB = JSON.parse(localStorage.getItem('laser_catalog_db') || '{}');
+            catalogDB[itemName] = {
+                name: itemName,
+                type: type,
+                machine: machine,
+                time: timeVal,
+                cost: costVal,
+                labor: parseFloat(labor) || 25.00,
+                depr: parseFloat(depr) || machineDepreciationDefaults[machine]
+            };
+            localStorage.setItem('laser_catalog_db', JSON.stringify(catalogDB));
+
+            loadCatalogTable();
+            loadCatalogDropdown();
+            alert(`Item "${itemName}" salvo no catálogo com sucesso!`);
+        }
+
+        function loadCatalogTable() {
+            const tbody = document.getElementById('catalog-table-body');
+            tbody.innerHTML = '';
+            let catalogDB = JSON.parse(localStorage.getItem('laser_catalog_db') || '{}');
+            const keys = Object.keys(catalogDB);
+
+            if (keys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-slate-500 text-xs">Nenhum item guardado no catálogo ainda.</td></tr>`;
+                return;
+            }
+
+            keys.forEach(name => {
+                const item = catalogDB[name];
+                let machName = item.machine === 'diode' ? 'Diodo' : (item.machine === 'co2' ? 'CO2' : 'Fiber');
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-white">${item.name}</td>
+                    <td class="px-4 py-3 text-slate-300 text-xs">${item.type === 'sheet' ? 'Corte' : 'Copo'} (${machName})</td>
+                    <td class="px-4 py-3 text-emerald-400 font-bold text-xs">R$ ${item.cost.toFixed(2)}</td>
+                    <td class="px-4 py-3 text-center space-x-2">
+                        <button onclick='deleteCatalogItem("${item.name}")' class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer" title="Excluir Item"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.loadCatalogDropdown = function() {
+            const select = document.getElementById('catalogItemsSelect');
+            if(!select) return;
+            select.innerHTML = '<option value="">-- Selecionar Item Salvo --</option>';
+            let catalogDB = JSON.parse(localStorage.getItem('laser_catalog_db') || '{}');
+            
+            for (let name in catalogDB) {
+                let opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            }
+        }
+
+        window.addSelectedItemFromCatalog = function() {
+            const select = document.getElementById('catalogItemsSelect');
+            const itemName = select.value;
+            if (!itemName) {
+                alert('Selecione um item salvo no catálogo primeiro.');
+                return;
+            }
+
+            let catalogDB = JSON.parse(localStorage.getItem('laser_catalog_db') || '{}');
+            let itemData = catalogDB[itemName];
+            if (!itemData) return;
+
+            addItem(itemData.type, {
+                mType: itemData.machine,
+                itemLabor: itemData.labor,
+                itemDepr: itemData.depr,
+                customName: itemData.name,
+                sheetPrice: itemData.type === 'sheet' ? itemData.cost : 0,
+                buyCost: itemData.type === 'tumbler' ? itemData.cost : 0,
+                qty: itemData.type === 'tumbler' ? 1 : 0,
+                cutTime: itemData.type === 'sheet' ? itemData.time : 0,
+                engTime: itemData.type === 'tumbler' ? itemData.time : 0
+            });
+
+            select.value = "";
+        }
+
+        window.deleteCatalogItem = function(name) {
+            if (confirm(`Tem certeza que deseja excluir o item "${name}" do catálogo?`)) {
+                let catalogDB = JSON.parse(localStorage.getItem('laser_catalog_db') || '{}');
+                delete catalogDB[name];
+                localStorage.setItem('laser_catalog_db', JSON.stringify(catalogDB));
+                loadCatalogTable();
+                loadCatalogDropdown();
+            }
+        }
+
+        window.saveCurrentBudget = function() {
+            const projectNameVal = document.getElementById('projectName').value.trim();
+            const controlNum = document.getElementById('budgetControlNumber').value.trim();
+            const saveIdentifier = projectNameVal || `Orçamento #${controlNum}`;
+
+            let itemsArr = [];
+            const cards = document.querySelectorAll('[data-budget-item]');
+            cards.forEach(card => {
+                const type = card.getAttribute('data-item-type');
+                const baseObj = {
+                    itemType: type,
+                    mType: card.querySelector('[name="mType"]').value,
+                    mPower: card.querySelector('[name="mPower"]').value,
+                    itemLabor: card.querySelector('[name="itemLabor"]').value,
+                    itemDepr: card.querySelector('[name="itemDepr"]').value,
+                    cutTime: card.querySelector('[name="cutTime"]').value,
+                    engTime: card.querySelector('[name="engTime"]').value
+                };
+
+                if (type === 'sheet') {
+                    itemsArr.push({
+                        ...baseObj,
+                        matType: card.querySelector('[name="matType"]').value,
+                        customName: card.querySelector('[name="customName"]').value,
+                        sheetPrice: card.querySelector('[name="sheetPrice"]').value,
+                        sheetW: card.querySelector('[name="sheetW"]').value,
+                        sheetH: card.querySelector('[name="sheetH"]').value,
+                        usedW: card.querySelector('[name="usedW"]').value,
+                        usedH: card.querySelector('[name="usedH"]').value
+                    });
+                } else {
+                    itemsArr.push({
+                        ...baseObj,
+                        tType: card.querySelector('[name="tType"]').value,
+                        customName: card.querySelector('[name="customName"]').value,
+                        buyCost: card.querySelector('[name="buyCost"]').value,
+                        qty: card.querySelector('[name="qty"]').value
+                    });
+                }
+            });
+
+            const itemData = {
+                controlNumber: controlNum,
+                dateTime: document.getElementById('budgetDateTime').value,
+                clientName: document.getElementById('clientNameInput').value.trim(),
+                clientPhone: document.getElementById('clientPhoneInput').value.trim(),
+                clientDoc: document.getElementById('clientDocInput').value.trim(),
+                clientAddress: document.getElementById('clientAddressInput').value.trim(),
+                projectName: projectNameVal,
+                energyCost: document.getElementById('energyCost').value,
+                budgetItems: itemsArr,
+                profitMargin: document.getElementById('profitMargin').value,
+                taxRate: document.getElementById('taxRate').value,
+                extraCost: document.getElementById('extraCost').value,
+                discountType: document.getElementById('discountType').value,
+                discountValue: document.getElementById('discountValue').value,
+                finalPrice: currentCalculations.finalPrice || 0
+            };
+
+            let savedBudgets = JSON.parse(localStorage.getItem('laser_saved_budgets') || '{}');
+            savedBudgets[saveIdentifier] = itemData;
+            localStorage.setItem('laser_saved_budgets', JSON.stringify(savedBudgets));
+
+            let historyList = JSON.parse(localStorage.getItem('laser_budget_history') || '[]');
+            historyList = historyList.filter(h => h.controlNumber !== itemData.controlNumber);
+            historyList.unshift({ name: saveIdentifier, ...itemData });
+            localStorage.setItem('laser_budget_history', JSON.stringify(historyList));
+
+            loadSavedBudgetsTable();
+            alert(`Orçamento "${saveIdentifier}" salvo com sucesso!`);
+        }
+
+        function loadSavedBudgetsTable() {
+            const tbody = document.getElementById('saved-budgets-table-body');
+            tbody.innerHTML = '';
+            let savedBudgets = JSON.parse(localStorage.getItem('laser_saved_budgets') || '{}');
+            const keys = Object.keys(savedBudgets);
+
+            if (keys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500 text-xs">Nenhum orçamento salvo ainda.</td></tr>`;
+                return;
+            }
+
+            keys.forEach(name => {
+                const b = savedBudgets[name];
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-white">${name}</td>
+                    <td class="px-4 py-3 text-slate-300 text-xs">${b.clientName || 'N/A'}</td>
+                    <td class="px-4 py-3 text-slate-400 text-xs">${b.dateTime || 'N/A'}</td>
+                    <td class="px-4 py-3 font-bold text-emerald-400">R$ ${(parseFloat(b.finalPrice) || 0).toFixed(2)}</td>
+                    <td class="px-4 py-3 text-center space-x-2">
+                        <button onclick='loadBudgetPreset("${name}")' class="bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer" title="Carregar Orçamento"><i class="fa-solid fa-folder-open"></i></button>
+                        <button onclick='deleteSavedBudget("${name}")' class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer" title="Excluir Orçamento"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.loadBudgetPreset = function(name) {
+            let savedBudgets = JSON.parse(localStorage.getItem('laser_saved_budgets') || '{}');
+            let data = savedBudgets[name];
+            if (!data) return;
+
+            loadBudgetData(name, data);
+            switchTab('calculator');
+        }
+
+        window.deleteSavedBudget = function(name) {
+            if (confirm(`Tem certeza que deseja excluir o orçamento "${name}"?`)) {
+                let savedBudgets = JSON.parse(localStorage.getItem('laser_saved_budgets') || '{}');
+                delete savedBudgets[name];
+                localStorage.setItem('laser_saved_budgets', JSON.stringify(savedBudgets));
+                loadSavedBudgetsTable();
+            }
+        }
+
+        window.switchTab = function(tab) {
+            document.getElementById('tab-calculator').classList.add('hidden');
+            document.getElementById('tab-catalog').classList.add('hidden');
+            document.getElementById('tab-saved-budgets').classList.add('hidden');
+            document.getElementById('tab-clients').classList.add('hidden');
+            document.getElementById('tab-history').classList.add('hidden');
+            document.getElementById('tab-tutorials').classList.add('hidden');
+            document.getElementById('tab-settings').classList.add('hidden');
+
+            document.getElementById('tab-btn-calculator').classList.remove('bg-cyan-500', 'text-slate-950', 'shadow');
+            document.getElementById('tab-btn-calculator').classList.add('text-slate-300');
+            
+            document.getElementById('tab-btn-catalog').classList.remove('bg-cyan-500', 'text-slate-950', 'shadow');
+            document.getElementById('tab-btn-catalog').classList.add('text-slate-300');
+
+            document.getElementById('tab-btn-saved-budgets').classList.remove('bg-cyan-500', 'text-slate-950', 'shadow');
+            document.getElementById('tab-btn-saved-budgets').classList.add('text-slate-300');
+
+            document.getElementById('tab-btn-clients').classList.remove('bg-cyan-500', 'text-slate-950', 'shadow');
+            document.getElementById('tab-btn-clients').classList.add('text-slate-300');
+
+            document.getElementById('tab-btn-history').classList.remove('bg-cyan-500', 'text-slate-950', 'shadow');
+            document.getElementById('tab-btn-history').classList.add('text-slate-300');
+
+            document.getElementById('tab-btn-tutorials').classList.remove('bg-cyan-500', 'text-slate-950', 'shadow');
+            document.getElementById('tab-btn-tutorials').classList.add('text-slate-300');
+
+            document.getElementById('tab-btn-settings').classList.remove('bg-cyan-500', 'text-slate-950', 'shadow');
+            document.getElementById('tab-btn-settings').classList.add('text-slate-300');
+
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            
+            const activeBtn = document.getElementById(`tab-btn-${tab}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-300', 'hover:text-white');
+                activeBtn.classList.add('bg-cyan-500', 'text-slate-950', 'shadow');
+            }
+
+            if (tab === 'history') {
+                loadHistoryTable();
+            } else if (tab === 'clients') {
+                loadClientsTable();
+            } else if (tab === 'catalog') {
+                loadCatalogTable();
+                loadCatalogDropdown();
+            } else if (tab === 'saved-budgets') {
+                loadSavedBudgetsTable();
+            } else if (tab === 'tutorials') {
+                loadVideosList();
+            }
+        }
+
+        window.loadHistoryItem = function(controlNum) {
+            let historyList = JSON.parse(localStorage.getItem('laser_budget_history') || '[]');
+            let data = historyList.find(h => h.controlNumber === controlNum);
+            if (!data) return;
+
+            loadBudgetData(data.name, data);
+            switchTab('calculator');
+        }
+
+        function loadBudgetData(itemName, data) {
+            if (data.controlNumber) document.getElementById('budgetControlNumber').value = data.controlNumber;
+            if (data.dateTime) document.getElementById('budgetDateTime').value = data.dateTime;
+            if (data.clientName) document.getElementById('clientNameInput').value = data.clientName;
+            if (data.clientPhone) document.getElementById('clientPhoneInput').value = data.clientPhone;
+            if (data.clientDoc) document.getElementById('clientDocInput').value = data.clientDoc;
+            if (data.clientAddress) document.getElementById('clientAddressInput').value = data.clientAddress;
+            if (data.projectName) document.getElementById('projectName').value = data.projectName;
+            
+            document.getElementById('energyCost').value = data.energyCost || 0.95;
+
+            document.getElementById('budget-items-container').innerHTML = '';
+            if (data.budgetItems && Array.isArray(data.budgetItems)) {
+                data.budgetItems.forEach(item => {
+                    addItem(item.itemType, item);
+                });
+            } else if (data.workMode) {
+                addItem(data.workMode, data);
+            }
+
+            document.getElementById('profitMargin').value = data.profitMargin || 100;
+            document.getElementById('taxRate').value = data.taxRate || 0;
+            document.getElementById('extraCost').value = data.extraCost || 0;
+            if (data.discountType) document.getElementById('discountType').value = data.discountType;
+            if (data.discountValue) document.getElementById('discountValue').value = data.discountValue;
+
+            updateDiscountLabel();
+            calculate();
+        }
+
+        window.deleteHistoryItem = function(controlNum) {
+            if (confirm(`Tem certeza que deseja remover o orçamento ${controlNum} do histórico?`)) {
+                let historyList = JSON.parse(localStorage.getItem('laser_budget_history') || '[]');
+                historyList = historyList.filter(h => h.controlNumber !== controlNum);
+                localStorage.setItem('laser_budget_history', JSON.stringify(historyList));
+                loadHistoryTable();
+            }
+        }
+
+        window.clearHistory = function() {
+            if (confirm('Tem certeza que deseja limpar todo o histórico de orçamentos?')) {
+                localStorage.removeItem('laser_budget_history');
+                loadHistoryTable();
+            }
+        }
+
+        function loadHistoryTable() {
+            const tbody = document.getElementById('history-table-body');
+            tbody.innerHTML = '';
+            let historyList = JSON.parse(localStorage.getItem('laser_budget_history') || '[]');
+
+            if (historyList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500 text-xs">Nenhum orçamento emitido ou salvo ainda.</td></tr>`;
+                return;
+            }
+
+            historyList.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-bold text-cyan-400">${item.controlNumber || 'N/A'}</td>
+                    <td class="px-4 py-3 text-slate-400 text-xs">${item.dateTime || 'N/A'}</td>
+                    <td class="px-4 py-3 font-medium text-white">${item.projectName || item.clientName || item.name || 'Sem Nome'}</td>
+                    <td class="px-4 py-3 font-bold text-emerald-400">R$ ${(parseFloat(item.finalPrice) || 0).toFixed(2)}</td>
+                    <td class="px-4 py-3 text-center space-x-2">
+                        <button onclick="loadHistoryItem('${item.controlNumber}')" class="bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer" title="Carregar Orçamento"><i class="fa-solid fa-folder-open"></i></button>
+                        <button onclick="deleteHistoryItem('${item.controlNumber}')" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer" title="Excluir do Histórico"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.calculate = function() {
+            const energyCost = parseFloat(document.getElementById('energyCost').value) || 0;
+            const controlNum = document.getElementById('budgetControlNumber').value.trim();
+            const dateTimeVal = document.getElementById('budgetDateTime').value.trim();
+            const clientNameVal = document.getElementById('clientNameInput').value.trim();
+            const clientPhoneVal = document.getElementById('clientPhoneInput').value.trim();
+            const clientDocVal = document.getElementById('clientDocInput').value.trim();
+            const clientAddressVal = document.getElementById('clientAddressInput').value.trim();
+            const projectNameVal = document.getElementById('projectName').value.trim();
+
+            const discountType = document.getElementById('discountType').value;
+            const discountInputVal = parseFloat(document.getElementById('discountValue').value) || 0;
+            const profitMargin = parseFloat(document.getElementById('profitMargin').value) || 0;
+            const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+            const extraCost = parseFloat(document.getElementById('extraCost').value) || 0;
+
+            let materialCost = 0;
+            let machineOpCost = 0;
+            let laborTotal = 0;
+            let itemCount = 0;
+
+            let calculatedItemsList = [];
+            let previewListHTML = '';
+
+            const cards = document.querySelectorAll('[data-budget-item]');
+            cards.forEach(card => {
+                const type = card.getAttribute('data-item-type');
+                itemCount++;
+
+                const powerFactor = parseFloat(card.querySelector('[name="mPower"]').value) || 1;
+                const itemLaborCostRate = parseFloat(card.querySelector('[name="itemLabor"]').value) || 0;
+                const itemDeprCostRate = parseFloat(card.querySelector('[name="itemDepr"]').value) || 0;
+
+                let itemMaterialCost = 0;
+                let cutTime = 0;
+                let engTime = 0;
+                let itemNameDesc = '';
+
+                if (type === 'sheet') {
+                    const matTypeSelect = card.querySelector('[name="matType"]');
+                    const matTypeText = matTypeSelect.options[matTypeSelect.selectedIndex].text;
+                    const customName = card.querySelector('[name="customName"]').value.trim();
+                    const sheetPrice = parseFloat(card.querySelector('[name="sheetPrice"]').value) || 0;
+                    const sheetW = parseFloat(card.querySelector('[name="sheetW"]').value) || 1;
+                    const sheetH = parseFloat(card.querySelector('[name="sheetH"]').value) || 1;
+                    const usedW = parseFloat(card.querySelector('[name="usedW"]').value) || 0;
+                    const usedH = parseFloat(card.querySelector('[name="usedH"]').value) || 0;
+
+                    const sheetArea = sheetW * sheetH;
+                    const usedArea = usedW * usedH;
+                    let proportion = sheetArea > 0 ? (usedArea / sheetArea) : 0;
+                    if(proportion > 1) proportion = 1;
+
+                    itemMaterialCost = sheetPrice * proportion;
+                    cutTime = parseFloat(card.querySelector('[name="cutTime"]').value) || 0;
+                    engTime = parseFloat(card.querySelector('[name="engTime"]').value) || 0;
+                    
+                    const baseDesc = customName ? customName : `Corte e Gravação (${matTypeText})`;
+                    itemNameDesc = `${baseDesc} - ${usedW}x${usedH}cm`;
+                } else {
+                    const tType = card.querySelector('[name="tType"]').value;
+                    const customName = card.querySelector('[name="customName"]').value.trim();
+                    const qty = parseInt(card.querySelector('[name="qty"]').value) || 0;
+                    const buyCost = parseFloat(card.querySelector('[name="buyCost"]').value) || 0;
+                    const cTime = parseFloat(card.querySelector('[name="cutTime"]').value) || 0;
+                    const eTime = parseFloat(card.querySelector('[name="engTime"]').value) || 0;
+
+                    itemMaterialCost = buyCost * qty;
+                    cutTime = cTime * qty;
+                    engTime = eTime * qty;
+                    itemNameDesc = `${customName || tType} (${qty} un.)`;
+                }
+
+                const itemHours = (cutTime + engTime) / 60;
+                const itemMachineCost = itemHours * ((itemDeprCostRate + energyCost * 2) * powerFactor);
+                const itemLaborCostTotal = itemHours * itemLaborCostRate;
+                const itemProdCost = itemMaterialCost + itemMachineCost + itemLaborCostTotal;
+                
+                const itemSubtotal = itemProdCost + (itemProdCost * (profitMargin / 100));
+                const itemFinalPrice = itemSubtotal / (1 - (taxRate / 100));
+
+                materialCost += itemMaterialCost;
+                machineOpCost += itemMachineCost;
+                laborTotal += itemLaborCostTotal;
+
+                calculatedItemsList.push({
+                    name: itemNameDesc,
+                    price: itemFinalPrice
+                });
+
+                previewListHTML += `<div class="flex justify-between text-slate-700"><span>• ${itemNameDesc}</span><span class="font-bold">R$ ${itemFinalPrice.toFixed(2)}</span></div>`;
+            });
+
+            if (itemCount === 0) {
+                previewListHTML = `<p class="text-slate-500 italic text-[11px]">Nenhum item adicionado.</p>`;
+            }
+
+            document.getElementById('preview-items-list').innerHTML = previewListHTML;
+
+            const totalProductionCost = materialCost + machineOpCost + laborTotal + extraCost;
+            const subtotal = totalProductionCost + (totalProductionCost * (profitMargin / 100));
+            const subtotalWithTax = subtotal / (1 - (taxRate / 100));
+
+            let discountAmount = 0;
+            if (discountType === 'percent') {
+                discountAmount = subtotalWithTax * (discountInputVal / 100);
+            } else {
+                discountAmount = discountInputVal;
+            }
+
+            let finalPrice = subtotalWithTax - discountAmount;
+            if (finalPrice < 0) finalPrice = 0;
+
+            const netProfit = finalPrice - totalProductionCost - (finalPrice * (taxRate / 100));
+
+            document.getElementById('resMaterial').textContent = `R$ ${materialCost.toFixed(2)}`;
+            document.getElementById('resMachine').textContent = `R$ ${machineOpCost.toFixed(2)}`;
+            document.getElementById('resLabor').textContent = `R$ ${laborTotal.toFixed(2)}`;
+            document.getElementById('resExtra').textContent = `R$ ${extraCost.toFixed(2)}`;
+            document.getElementById('resTotalCost').textContent = `R$ ${totalProductionCost.toFixed(2)}`;
+            document.getElementById('resProfit').textContent = `R$ ${netProfit.toFixed(2)}`;
+
+            if (discountAmount > 0) {
+                document.getElementById('resDiscountLine').classList.remove('hidden');
+                document.getElementById('resDiscountAmount').textContent = `- ${discountType === 'percent' ? 'R$ ' + discountAmount.toFixed(2) + ' (' + discountInputVal + '%)' : 'R$ ' + discountAmount.toFixed(2)}`;
+                
+                document.getElementById('preview-discount-box').classList.remove('hidden');
+                document.getElementById('preview-discount-val').textContent = `- R$ ${discountAmount.toFixed(2)}`;
+            } else {
+                document.getElementById('resDiscountLine').classList.add('hidden');
+                document.getElementById('preview-discount-box').classList.add('hidden');
+            }
+
+            document.getElementById('resFinalPrice').textContent = `R$ ${finalPrice.toFixed(2)}`;
+
+            currentCalculations = {
+                clientName: clientNameVal,
+                clientPhone: clientPhoneVal,
+                clientDoc: clientDocVal,
+                clientAddress: clientAddressVal,
+                projectName: projectNameVal,
+                finalPrice,
+                controlNumber: controlNum,
+                dateTime: dateTimeVal,
+                discountAmount,
+                discountType,
+                discountInputVal,
+                items: calculatedItemsList
+            };
+
+            document.getElementById('preview-client-name').textContent = clientNameVal || "--";
+            document.getElementById('preview-client-doc').textContent = clientDocVal || "--";
+            document.getElementById('preview-client-phone').textContent = clientPhoneVal || "--";
+            document.getElementById('preview-client-address').textContent = clientAddressVal || "--";
+            document.getElementById('preview-project-name').textContent = projectNameVal || "Serviço Laser";
+            document.getElementById('preview-final-price').textContent = `R$ ${finalPrice.toFixed(2)}`;
+            document.getElementById('preview-control-number').textContent = controlNum || "001";
+            document.getElementById('preview-datetime').textContent = dateTimeVal || "00/00/0000 00:00";
+        }
+
+        window.updatePdfPreview = function() {
+            const name = document.getElementById('companyName').value.trim();
+            const doc = document.getElementById('companyDoc').value.trim();
+            const phone = document.getElementById('companyPhone').value.trim();
+            const address = document.getElementById('companyAddress').value.trim();
+
+            document.getElementById('preview-company-name').textContent = name || "Nome da sua Empresa";
+            document.getElementById('preview-company-doc').textContent = `CNPJ: ${doc || "00.000.000/0001-00"}`;
+            document.getElementById('preview-company-phone').textContent = `Tel: ${phone || "(00) 00000-0000"}`;
+            document.getElementById('preview-company-address').textContent = `Endereço: ${address || "Cidade - UF"}`;
+        }
+
+        window.handleLogoUpload = function(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    companyLogoBase64 = e.target.result;
+                    document.getElementById('companyLogoPreview').src = companyLogoBase64;
+                    document.getElementById('logoPreviewContainer').classList.remove('hidden');
+
+                    document.getElementById('preview-logo-img').src = companyLogoBase64;
+                    document.getElementById('preview-logo-img').classList.remove('hidden');
+                    document.getElementById('preview-no-logo').classList.add('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        window.saveSettings = function() {
+            const settings = {
+                name: document.getElementById('companyName').value,
+                doc: document.getElementById('companyDoc').value,
+                phone: document.getElementById('companyPhone').value,
+                address: document.getElementById('companyAddress').value,
+                logo: companyLogoBase64
+            };
+            localStorage.setItem('laser_calc_settings', JSON.stringify(settings));
+            alert('Dados da empresa e logotipo salvos com sucesso!');
+        }
+
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem('laser_calc_settings') || '{}');
+            if(settings.name) document.getElementById('companyName').value = settings.name;
+            if(settings.doc) document.getElementById('companyDoc').value = settings.doc;
+            if(settings.phone) document.getElementById('companyPhone').value = settings.phone;
+            if(settings.address) document.getElementById('companyAddress').value = settings.address;
+            if(settings.logo) {
+                companyLogoBase64 = settings.logo;
+                document.getElementById('companyLogoPreview').src = companyLogoBase64;
+                document.getElementById('logoPreviewContainer').classList.remove('hidden');
+
+                document.getElementById('preview-logo-img').src = companyLogoBase64;
+                document.getElementById('preview-logo-img').classList.remove('hidden');
+                document.getElementById('preview-no-logo').classList.add('hidden');
+            }
+            updatePdfPreview();
+        }
+
+        window.sendWhatsAppWithPDF = function() {
+            saveAndExportPDF();
+
+            const settings = JSON.parse(localStorage.getItem('laser_calc_settings') || '{}');
+            const compName = settings.name ? `*${settings.name}*\n` : '';
+            let itemsText = "";
+            if (currentCalculations.items && currentCalculations.items.length > 0) {
+                currentCalculations.items.forEach(it => {
+                    itemsText += `• ${it.name}: R$ ${it.price.toFixed(2)}\n`;
+                });
+            }
+            const discText = currentCalculations.discountAmount > 0 ? `Desconto: R$ ${currentCalculations.discountAmount.toFixed(2)}\n` : '';
+            const text = `${compName}*ORÇAMENTO Nº ${currentCalculations.controlNumber} (${currentCalculations.dateTime})*\n*Cliente:* ${currentCalculations.clientName || 'N/A'}\n*Projeto:* ${currentCalculations.projectName || 'Serviço Laser'}\n\n*Itens:*\n${itemsText}${discText}*Valor Final: R$ ${currentCalculations.finalPrice.toFixed(2)}*`;
+            
+            let phoneClean = currentCalculations.clientPhone ? currentCalculations.clientPhone.replace(/\D/g, '') : '';
+            let waUrl = phoneClean ? `https://wa.me/55${phoneClean}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
+            
+            setTimeout(() => {
+                window.open(waUrl, '_blank');
+            }, 500);
+        }
+
+        window.saveAndExportPDF = function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const settings = JSON.parse(localStorage.getItem('laser_calc_settings') || '{}');
+
+            if (settings.logo) {
+                try {
+                    doc.addImage(settings.logo, 'JPEG', 14, 12, 25, 25);
+                } catch(e) {}
+            }
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.text(settings.name || "LaserCalc Pro", settings.logo ? 45 : 14, 20);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.text(`CNPJ: ${settings.doc || 'N/A'} | Tel: ${settings.phone || 'N/A'}`, settings.logo ? 45 : 14, 26);
+            doc.text(`Endereço: ${settings.address || 'N/A'}`, settings.logo ? 45 : 14, 32);
+
+            doc.setLineWidth(0.5);
+            doc.line(14, 40, 196, 40);
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text("ORÇAMENTO DE SERVIÇO A LASER", 14, 52);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.text(`Nº de Controle: ${currentCalculations.controlNumber}    |    Data/Hora: ${currentCalculations.dateTime}`, 14, 60);
+            doc.text(`Cliente: ${currentCalculations.clientName || 'N/A'}`, 14, 67);
+            doc.text(`CNPJ/CPF: ${currentCalculations.clientDoc || 'N/A'}    |    Tel: ${currentCalculations.clientPhone || 'N/A'}`, 14, 74);
+            doc.text(`Endereço: ${currentCalculations.clientAddress || 'N/A'}`, 14, 81);
+            doc.text(`Projeto / Obs: ${currentCalculations.projectName || 'Serviço Laser'}`, 14, 88);
+
+            doc.setFont("helvetica", "bold");
+            doc.text("Itens do Orçamento:", 14, 98);
+
+            doc.setFont("helvetica", "normal");
+            let startY = 105;
+            if (currentCalculations.items && currentCalculations.items.length > 0) {
+                currentCalculations.items.forEach(it => {
+                    doc.text(`• ${it.name}`, 16, startY);
+                    doc.text(`R$ ${it.price.toFixed(2)}`, 170, startY, { align: 'right' });
+                    startY += 7;
+                });
+            } else {
+                doc.text("Nenhum item adicionado.", 16, startY);
+                startY += 7;
+            }
+
+            startY += 4;
+            doc.setLineWidth(0.2);
+            doc.line(14, startY, 196, startY);
+            startY += 8;
+
+            if (currentCalculations.discountAmount > 0) {
+                doc.text("Desconto Aplicado:", 14, startY);
+                doc.text(`- R$ ${currentCalculations.discountAmount.toFixed(2)}`, 170, startY, { align: 'right' });
+                startY += 7;
+            }
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.text("Valor Final Sugerido:", 14, startY);
+            doc.text(`R$ ${currentCalculations.finalPrice.toFixed(2)}`, 170, startY, { align: 'right' });
+
+            doc.save(`orcamento-${currentCalculations.controlNumber}.pdf`);
+        }
+
+        // CADASTRO LIVRE DE CLIENTES
+        window.saveClient = function() {
+            const name = document.getElementById('clientName').value.trim();
+            const phone = document.getElementById('clientPhone').value.trim();
+            const doc = document.getElementById('clientDoc').value.trim();
+            const address = document.getElementById('clientAddress').value.trim();
+            const originalName = document.getElementById('editClientOriginalName').value.trim();
+
+            if (!name) {
+                alert('Preencha pelo menos o nome ou empresa do cliente.');
+                return;
+            }
+
+            let clientsDB = JSON.parse(localStorage.getItem('laser_clients_db') || '{}');
+            
+            if (originalName && originalName !== name) {
+                delete clientsDB[originalName];
+            }
+
+            clientsDB[name] = { name, phone, doc, address };
+            localStorage.setItem('laser_clients_db', JSON.stringify(clientsDB));
+
+            clearClientForm();
+            loadClientsTable();
+            loadClientsDropdown();
+            alert(`Cliente "${name}" salvo com sucesso!`);
+        }
+
+        function loadClientsTable() {
+            const tbody = document.getElementById('clients-table-body');
+            tbody.innerHTML = '';
+            let clientsDB = JSON.parse(localStorage.getItem('laser_clients_db') || '{}');
+            const keys = Object.keys(clientsDB);
+
+            if (keys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-slate-500 text-xs">Nenhum cliente cadastrado ainda.</td></tr>`;
+                return;
+            }
+
+            keys.forEach(name => {
+                const c = clientsDB[name];
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-white">${c.name}</td>
+                    <td class="px-4 py-3 text-slate-300 text-xs">${c.phone || 'N/A'}</td>
+                    <td class="px-4 py-3 text-slate-300 text-xs">${c.doc || 'N/A'}</td>
+                    <td class="px-4 py-3 text-center space-x-2">
+                        <button onclick='editClient(${JSON.stringify(c)})' class="bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer" title="Editar Cliente"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick='deleteClient("${c.name}")' class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer" title="Excluir Cliente"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.loadClientsDropdown = function() {
+            const select = document.getElementById('selectClientPreset');
+            if(!select) return;
+            select.innerHTML = '<option value="">-- Selecionar Cliente Salvo --</option>';
+            let clientsDB = JSON.parse(localStorage.getItem('laser_clients_db') || '{}');
+            
+            for (let name in clientsDB) {
+                let opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            }
+        }
+
+        window.applySelectedClient = function() {
+            const select = document.getElementById('selectClientPreset');
+            const clientName = select.value;
+            if (!clientName) return;
+
+            let clientsDB = JSON.parse(localStorage.getItem('laser_clients_db') || '{}');
+            let c = clientsDB[clientName];
+            if (!c) return;
+
+            document.getElementById('clientNameInput').value = c.name || "";
+            document.getElementById('clientPhoneInput').value = c.phone || "";
+            document.getElementById('clientDocInput').value = c.doc || "";
+            document.getElementById('clientAddressInput').value = c.address || "";
+            calculate();
+        }
+
+        window.editClient = function(c) {
+            document.getElementById('clientName').value = c.name;
+            document.getElementById('editClientOriginalName').value = c.name;
+            document.getElementById('clientPhone').value = c.phone || '';
+            document.getElementById('clientDoc').value = c.doc || '';
+            document.getElementById('clientAddress').value = c.address || '';
+        }
+
+        window.deleteClient = function(name) {
+            if (confirm(`Tem certeza que deseja excluir o cliente "${name}"?`)) {
+                let clientsDB = JSON.parse(localStorage.getItem('laser_clients_db') || '{}');
+                delete clientsDB[name];
+                localStorage.setItem('laser_clients_db', JSON.stringify(clientsDB));
+                loadClientsTable();
+                loadClientsDropdown();
+            }
+        }
+
+        window.clearClientForm = function() {
+            document.getElementById('clientName').value = '';
+            document.getElementById('editClientOriginalName').value = '';
+            document.getElementById('clientPhone').value = '';
+            document.getElementById('clientDoc').value = '';
+            document.getElementById('clientAddress').value = '';
+        }
+
+        // SEGURANÇA ADMIN PARA GERENCIAR E DELETAR E-MAILS DE ACESSO
+        window.openAdminAccessModal = function() {
+            document.getElementById('adminModalPassword').value = '';
+            document.getElementById('admin-modal-error').classList.add('hidden');
+            document.getElementById('admin-access-modal').classList.remove('hidden');
+        }
+
+        window.closeAdminAccessModal = function() {
+            document.getElementById('admin-access-modal').classList.add('hidden');
+        }
+
+        window.verifyAdminAccessForUser = function() {
+            const pass = document.getElementById('adminModalPassword').value;
+            const currentUser = sessionStorage.getItem('laser_current_user');
+
+            if (usersDB[currentUser] && usersDB[currentUser] === pass) {
+                closeAdminAccessModal();
+                loadAdminUsersTable();
+                document.getElementById('user-register-modal').classList.remove('hidden');
+            } else {
+                const err = document.getElementById('admin-modal-error');
+                err.textContent = "Palavra-passe de administrador incorreta.";
+                err.classList.remove('hidden');
+            }
+        }
+
+        window.closeUserRegisterModal = function() {
+            document.getElementById('user-register-modal').classList.add('hidden');
+            document.getElementById('modalClientEmail').value = '';
+            document.getElementById('modalClientPass').value = '';
+        }
+
+        window.saveNewUserAccess = function() {
+            const email = document.getElementById('modalClientEmail').value.trim().toLowerCase();
+            const pass = document.getElementById('modalClientPass').value.trim();
+
+            if (!email || !pass) {
+                alert('Preencha o e-mail e a palavra-passe.');
+                return;
+            }
+
+            usersDB[email] = pass;
+            localStorage.setItem('laser_users_db', JSON.stringify(usersDB));
+
+            document.getElementById('modalClientEmail').value = '';
+            document.getElementById('modalClientPass').value = '';
+            loadAdminUsersTable();
+            alert(`Acesso liberado com sucesso para o e-mail: ${email}!`);
+        }
+
+        window.loadAdminUsersTable = function() {
+            const tbody = document.getElementById('admin-users-table-body');
+            tbody.innerHTML = '';
+            const keys = Object.keys(usersDB);
+
+            if (keys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-slate-500">Nenhum utilizador cadastrado.</td></tr>`;
+                return;
+            }
+
+            keys.forEach(email => {
+                const pass = usersDB[email];
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/50";
+                
+                let deleteAction = email !== "comercial.abreulaser@gmail.com" ? 
+                    `<button onclick="deleteUserAccess('${email}')" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2 py-1 rounded text-[10px] font-bold cursor-pointer" title="Deletar Acesso"><i class="fa-solid fa-trash"></i> Excluir</button>` : 
+                    `<span class="text-[10px] text-slate-500 italic">Admin Principal</span>`;
+
+                tr.innerHTML = `
+                    <td class="px-3 py-2 font-medium text-white">${email}</td>
+                    <td class="px-3 py-2 text-slate-300 font-mono">${pass}</td>
+                    <td class="px-3 py-2 text-center">${deleteAction}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.deleteUserAccess = function(email) {
+            if (confirm(`Tem certeza que deseja revogar e excluir o acesso do e-mail "${email}"?`)) {
+                delete usersDB[email];
+                localStorage.setItem('laser_users_db', JSON.stringify(usersDB));
+                loadAdminUsersTable();
+            }
+        }
+
+        // FUNÇÕES DO PAINEL ADMIN DE VÍDEOS
+        window.toggleAdminPanel = function() {
+            const section = document.getElementById('tutorial-admin-section');
+            section.classList.toggle('hidden');
+        }
+
+        window.verifyTutorialAdmin = function() {
+            const pass = document.getElementById('tutorialAdminPass').value;
+            const currentUser = sessionStorage.getItem('laser_current_user');
+            
+            if (usersDB[currentUser] && usersDB[currentUser] === pass) {
+                document.getElementById('tutorial-auth-box').classList.add('hidden');
+                document.getElementById('admin-video-panel').classList.remove('hidden');
+                loadVideosList();
+            } else {
+                const err = document.getElementById('tutorial-error');
+                err.textContent = "Palavra-passe incorreta.";
+                err.classList.remove('hidden');
+            }
+        }
+
+        window.lockTutorialAdmin = function() {
+            document.getElementById('tutorial-auth-box').classList.remove('hidden');
+            document.getElementById('admin-video-panel').classList.add('hidden');
+            document.getElementById('tutorialAdminPass').value = '';
+            document.getElementById('tutorial-admin-section').classList.add('hidden');
+            loadVideosList();
+        }
+
+        window.saveVideoTutorial = function() {
+            const title = document.getElementById('vidTitle').value.trim();
+            let url = document.getElementById('vidUrl').value.trim();
+            const desc = document.getElementById('vidDesc').value.trim();
+
+            if (!title || !url) {
+                alert('Preencha pelo menos o título e o link do vídeo.');
+                return;
+            }
+
+            if (url.includes('watch?v=')) {
+                let videoId = url.split('watch?v=')[1].split('&')[0];
+                url = `https://www.youtube.com/embed/${videoId}`;
+            } else if (url.includes('youtu.be/')) {
+                let videoId = url.split('youtu.be/')[1].split('?')[0];
+                url = `https://www.youtube.com/embed/${videoId}`;
+            }
+
+            let videosList = JSON.parse(localStorage.getItem('laser_videos_db') || '[]');
+            videosList.push({ id: Date.now(), title, url, desc });
+            localStorage.setItem('laser_videos_db', JSON.stringify(videosList));
+
+            document.getElementById('vidTitle').value = '';
+            document.getElementById('vidUrl').value = '';
+            document.getElementById('vidDesc').value = '';
+
+            loadVideosList();
+            alert('Vídeo adicionado com sucesso!');
+        }
+
+        window.deleteVideoTutorial = function(id) {
+            if (confirm('Tem certeza que deseja remover este vídeo?')) {
+                let videosList = JSON.parse(localStorage.getItem('laser_videos_db') || '[]');
+                videosList = videosList.filter(v => v.id !== id);
+                localStorage.setItem('laser_videos_db', JSON.stringify(videosList));
+                loadVideosList();
+            }
+        }
+
+        window.moveVideoUp = function(index) {
+            let videosList = JSON.parse(localStorage.getItem('laser_videos_db') || '[]');
+            if (index > 0) {
+                let temp = videosList[index];
+                videosList[index] = videosList[index - 1];
+                videosList[index - 1] = temp;
+                localStorage.setItem('laser_videos_db', JSON.stringify(videosList));
+                loadVideosList();
+            }
+        }
+
+        window.moveVideoDown = function(index) {
+            let videosList = JSON.parse(localStorage.getItem('laser_videos_db') || '[]');
+            if (index < videosList.length - 1) {
+                let temp = videosList[index];
+                videosList[index] = videosList[index + 1];
+                videosList[index + 1] = temp;
+                localStorage.setItem('laser_videos_db', JSON.stringify(videosList));
+                loadVideosList();
+            }
+        }
+
+        window.loadVideosList = function() {
+            const container = document.getElementById('videos-grid-container');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            let videosList = JSON.parse(localStorage.getItem('laser_videos_db') || '[]');
+            const isAdminUnlocked = !document.getElementById('admin-video-panel').classList.contains('hidden');
+
+            if (videosList.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 italic text-xs text-center py-4">Nenhum vídeo tutorial cadastrado no momento.</p>`;
+                return;
+            }
+
+            videosList.forEach((v, index) => {
+                const card = document.createElement('div');
+                
+                if (index === 0) {
+                    card.className = "bg-slate-900 border-2 border-cyan-500/80 rounded-2xl p-5 space-y-4 shadow-2xl";
+                } else {
+                    card.className = "bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-lg flex flex-col justify-between";
+                }
+                
+                let adminControls = '';
+                if (isAdminUnlocked) {
+                    let upBtn = index > 0 ? `<button onclick="moveVideoUp(${index})" class="text-cyan-400 hover:text-cyan-300 text-xs bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/20 cursor-pointer" title="Subir"><i class="fa-solid fa-arrow-up"></i></button>` : '';
+                    let downBtn = index < videosList.length - 1 ? `<button onclick="moveVideoDown(${index})" class="text-cyan-400 hover:text-cyan-300 text-xs bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/20 cursor-pointer" title="Descer"><i class="fa-solid fa-arrow-down"></i></button>` : '';
+                    let deleteBtn = `<button onclick="deleteVideoTutorial(${v.id})" class="text-red-400 hover:text-red-300 text-xs bg-red-500/10 px-2.5 py-1 rounded-lg border border-red-500/20 cursor-pointer" title="Excluir"><i class="fa-solid fa-trash mr-1"></i> Excluir</button>`;
+                    
+                    adminControls = `<div class="flex items-center gap-1.5">${upBtn}${downBtn}${deleteBtn}</div>`;
+                }
+
+                let badgeFeatured = index === 0 ? `<span class="bg-cyan-500/20 text-cyan-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-cyan-500/30"><i class="fa-solid fa-star mr-1"></i> Vídeo Principal em Destaque</span>` : '';
+
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-start gap-2 flex-wrap">
+                            <div class="space-y-1">
+                                ${badgeFeatured}
+                                <h3 class="font-bold text-white ${index === 0 ? 'text-lg text-cyan-300 pt-1' : 'text-sm'}">${v.title}</h3>
+                            </div>
+                            ${adminControls}
+                        </div>
+                        <p class="text-xs text-slate-300">${v.desc || ''}</p>
+                    </div>
+                    <div class="relative w-full ${index === 0 ? 'aspect-video max-h-[420px]' : 'aspect-video'} rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shadow-inner">
+                        <iframe src="${v.url}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
